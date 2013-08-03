@@ -1,0 +1,25 @@
+Need Chromium (Raw json view):
+  sudo apt-get install chromium-browser
+
+Need Chrome driver for cucumber:
+  wget https://chromedriver.googlecode.com/files/chromedriver_linux32_2.1.zip
+  unzip
+  chmod +x chromedriver
+
+Must have (gem install...):
+  require 'rubygems'
+  require 'json'
+  require 'open-uri'
+  require 'fileutils'
+
+To run feature(s):
+  bundle exec cucumber 
+
+Gotchas:
+  There were times that logging in seemed to be needed.  Uncomment the login step and put in  your username and password to login first.
+
+  There's a sleep between each call because if you do them all too quickly you will sometimes get an error or the same listing again.  3 is an arbitrary number.
+
+  If you load up Songza, pick the playlist you want, then use firebug and look for "data-sz-station-id" to find your station's ID.  Using the playlist name and automatically resolving the ID would be nice, but the xPath wasn't working out for me...
+
+  There are a few known issues with artist/titles not working correctly.  The check for "!!!" was because I didn't want to look into escaping characters, and there was a band with a stupid name breaking my file creation.  It appears there are a few other issues with special characters in names.  
