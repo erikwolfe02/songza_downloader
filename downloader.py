@@ -30,8 +30,8 @@ def main(argv):
 	print "Downloading album " + album + "..." 
 	
 	for x in range(count-1):
-		#420 error occurs without a sleep.  Shorter time may work fine
-		time.sleep(2)
+		# 420 error occurs without a sleep.  Shorter time may work fine
+		# don't need if converting each one as we go... time.sleep(2)
 		song_json = get_json(next_song_url, opener)
 		
 		artist = song_json['song']['artist']['name']
@@ -54,6 +54,7 @@ def download_file(filepath, artist, title, genre, album, song_url):
 	with open(file_path_builder(filepath, album, artist, title), 'wb') as dest:
 		shutil.copyfileobj(song, dest)
 		convert_files(filepath, album, artist, title, genre)
+
 def album_path_builder(filepath, album):
 	album = replace_special_characters(album)
 	return filepath + "\\" + album + "\\"
