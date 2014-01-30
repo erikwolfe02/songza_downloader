@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 # For research purposes only
 import urllib2
 import json
@@ -8,6 +9,7 @@ import sys
 import os
 import time
 import re
+import subprocess
 from subprocess import call
 
 def main(argv):
@@ -19,8 +21,10 @@ def main(argv):
 		return
 	
 	opener = urllib2.build_opener()
+	
 	# sessionid is used to provide a unique song on each next request
 	opener.addheaders.append(('Cookie', 'sessionid=%s' % str(session_id_generator())))
+	
 	# Every album has an ID.  Given an id, this will find all the metadata for an album
 	url = "http://songza.com/api/1/station/" + str(album_id)
 	album_json = get_json(url, opener)
@@ -30,37 +34,42 @@ def main(argv):
 	print "Downloading album " + album + "..." 
 	
 	for x in range(count-1):
-		# 420 error occurs without a sleep.  Shorter time may work fine
-		# don't need if converting each one as we go... time.sleep(2)
+		
 		song_json = get_json(next_song_url, opener)
-		
 		artist = song_json['song']['artist']['name']
-		genre = song_json['song']['genre']
 		title = song_json['song']['title']
+		genre = song_json['song']['genre']
 		
-		if not path_exists(file_path_builder(filepath, album, artist, title)):
+		the_song = Song(song_json, artist, title, genre, album)
+		
+		temp_file_path = file_path_builder(filepath, the_song)
+		if (not path_exists(temp_file_path+".mp4")) and (not path_exists(temp_file_path+".mp3")):
 			trackNumber = str(x  + 1)
 			try:
-				print "Track " + trackNumber + "/" + str(count) + " " + artist + "-" + title
+				print ("Track " + trackNumber + "/" + str(count) + " " + artist + "-" + title).encode('utf8')
+				download_file(filepath, the_song)
 			except UnicodeEncodeError as e:
 				print "UnicodeEncodeError: " + str(e)
-			
-			download_file(filepath, artist, title, genre, album, song_json['listen_url'])
-		
-def download_file(filepath, artist, title, genre, album, song_url):
-	song = urllib2.urlopen(song_url)
-	ensure_dir(album_path_builder(filepath, album))
-	# write the file out
-	with open(file_path_builder(filepath, album, artist, title), 'wb') as dest:
-		shutil.copyfileobj(song, dest)
-		convert_files(filepath, album, artist, title, genre)
-
-def album_path_builder(filepath, album):
-	album = replace_special_characters(album)
-	return filepath + "\\" + album + "\\"
+		else:
+			# 420 error occurs without a sleep.  Shorter time may work fine
+			# don't need if we are converting though  
+			time.sleep(2)
+	# Clean up mp4s later
 	
-def file_path_builder(filepath, album, artist, title):
-	return album_path_builder(filepath, album)+ replace_special_characters(artist) + "-" + replace_special_characters(title) + ".mp4"
+def download_file(user_filepath, song):
+	song_file = urllib2.urlopen(song.song_json['listen_url'])
+	ensure_dir(album_path_builder(user_filepath, song.album))
+	# write the file out
+	with open(file_path_builder(user_filepath, song)+".mp4", 'wb') as dest:
+		shutil.copyfileobj(song_file, dest)
+		convert_file(user_filepath, song)
+
+def album_path_builder(user_filepath, album):
+	album = replace_special_characters(album)
+	return user_filepath + "\\" + album + "\\"
+	
+def file_path_builder(user_filepath, song):
+	return album_path_builder(user_filepath, song.album)+ replace_special_characters(song.artist) + "-" + replace_special_characters(song.title).encode('utf8')
 
 # replace anything that is not a number or letter with a dash
 def replace_special_characters(text):
@@ -80,32 +89,31 @@ def get_json(url, opener):
 	response = opener.open(str(url))
 	responseString = str(response.read())
 	return json.loads(responseString)
-	
-def convert_files(filepath, album, artist, title, genre):
-	album_path = album_path_builder(filepath, album)
-	files = []
-	filelist = [ f for f in os.listdir(album_path) if f.endswith(".mp4") ]
-	for path in filelist:
-		basename = os.path.basename(path)
-		filename = os.path.splitext(basename)[0]
-		files.append(filename)
 
-	if len(files) == 0:
-		exit("Could not find any files to convert that have not already been converted.")
-	 
-	for filename in files:
-		print "-- converting %s.mp4 to %s.mp3 --" % (filename, filename)
-		call(["mplayer", "-novideo", "-nocorrect-pts", "-ao", "pcm:waveheader", album_path + filename + ".mp4"])
-		call(["lame", "-h", "--vbr-new", "-T", "--add-id3v2", "--ta", artist, "--tt", title, "--tl", "Songza - " + album, "--tg", genre, "audiodump.wav", album_path + filename + ".mp3"])
-		os.remove("audiodump.wav")
-		
+def convert_file(user_filepath, song):
+	log_file = open('logfile', 'w')
+	
+	file_path = file_path_builder(user_filepath, song)
+	filename = replace_special_characters(song.artist) +"-"+ replace_special_characters(song.title)
+	print "-- converting %s.mp4 to %s.mp3 --" % (filename, filename)
+	
+	call(["mplayer", "-novideo", "-nocorrect-pts", "-ao", "pcm:waveheader", file_path + ".mp4"], stdout=log_file, stderr=subprocess.STDOUT)
+	
+	call(["lame", "-h", "--vbr-new", "-T", "--add-id3v2", "--ta", song.artist, "--tt", song.title, "--tl", "Songza - " + song.album, "--tg", song.genre, "audiodump.wav", file_path + ".mp3"], stdout=log_file, stderr=subprocess.STDOUT)
+	log_file.flush()
+	
+	os.remove("audiodump.wav")
+
+class Song:
+    def __init__(self, song_json, artist, title, genre, album):
+		self.song_json = song_json
+		self.artist = artist
+		self.title = title
+		self.genre = genre
+		self.album = album
+	
 if __name__ == "__main__":
 	main(sys.argv[1:])
-
-
-
-
-
 
 
 
