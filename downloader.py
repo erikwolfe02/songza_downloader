@@ -35,6 +35,7 @@ def main(argv):
 		song_json = get_json(next_song_url, opener)
 		
 		artist = song_json['song']['artist']['name']
+		genre = song_json['song']['genre']
 		title = song_json['song']['title']
 		
 		if not path_exists(file_path_builder(filepath, album, artist, title)):
@@ -44,16 +45,15 @@ def main(argv):
 			except UnicodeEncodeError as e:
 				print "UnicodeEncodeError: " + str(e)
 			
-			download_file(filepath, artist, title, album, song_json['listen_url'])
+			download_file(filepath, artist, title, genre, album, song_json['listen_url'])
 		
-def download_file(filepath, artist, title, album, songUrl):
-	song = urllib2.urlopen(songUrl)
+def download_file(filepath, artist, title, genre, album, song_url):
+	song = urllib2.urlopen(song_url)
 	ensure_dir(album_path_builder(filepath, album))
 	# write the file out
 	with open(file_path_builder(filepath, album, artist, title), 'wb') as dest:
 		shutil.copyfileobj(song, dest)
-		#convert_files(album) -- Figure this out
-
+		convert_files(filepath, album, artist, title, genre)
 def album_path_builder(filepath, album):
 	album = replace_special_characters(album)
 	return filepath + "\\" + album + "\\"
@@ -80,8 +80,8 @@ def get_json(url, opener):
 	responseString = str(response.read())
 	return json.loads(responseString)
 	
-def convert_files(album):
-	album_path = album_path_builder(album)
+def convert_files(filepath, album, artist, title, genre):
+	album_path = album_path_builder(filepath, album)
 	files = []
 	filelist = [ f for f in os.listdir(album_path) if f.endswith(".mp4") ]
 	for path in filelist:
@@ -95,9 +95,8 @@ def convert_files(album):
 	for filename in files:
 		print "-- converting %s.mp4 to %s.mp3 --" % (filename, filename)
 		call(["mplayer", "-novideo", "-nocorrect-pts", "-ao", "pcm:waveheader", album_path + filename + ".mp4"])
-		call(["lame", "-h", "-b", "192", "audiodump.wav", album_path + "/" + filename + ".mp3"])
+		call(["lame", "-h", "--vbr-new", "-T", "--add-id3v2", "--ta", artist, "--tt", title, "--tl", "Songza - " + album, "--tg", genre, "audiodump.wav", album_path + filename + ".mp3"])
 		os.remove("audiodump.wav")
-	 
 		
 if __name__ == "__main__":
 	main(sys.argv[1:])
