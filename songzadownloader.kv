@@ -1,16 +1,15 @@
 #:kivy 1.8.0
 
+<ListDropDown>:
+    id: list_drop_down
+    size_hint_y: None
+    height: root.height/10
+
 <PlaylistSearcher>:
     station_list: station_list
-    station_id: station_id
-    TextInput:
-        id: station_id
-        size_hint_y: None
-        height: root.height/10
-        input_type: "number"
-        multiline: "False"
-        hint_text: "Station ID"
-        on_text_validate: root.download()
+    list_type: list_type
+    ListDropDown:
+        id: list_type
     StationList:
         id: station_list
         height: root.height * .9

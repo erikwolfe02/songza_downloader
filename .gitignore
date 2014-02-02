@@ -1,3 +1,4 @@
 logfile
 audiodump.wav
-*.pyc
+*.idea
+*.psd

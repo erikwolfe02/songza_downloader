@@ -2,25 +2,35 @@ import kivy
 kivy.require('1.8.0')
 
 from stationDownloader import StationDownloader
+from stationLoader import StationLoader
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.scrollview import ScrollView
-from kivy.uix.label import Label
-from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.properties import ObjectProperty
-from kivy.graphics import Color, Rectangle
-from kivy.core.image import Image as CoreImage
-from kivy.core.window import Window
+from kivy.uix.dropdown import DropDown
 
 class DownloaderWrapper(BoxLayout):
     def __init__(self, **kwargs):
         super(DownloaderWrapper, self).__init__(**kwargs)
         pass
 
+class ListDropDown(DropDown):
+    def __init__(self, **kwargs):
+        super(ListDropDown, self).__init__(**kwargs)
+        loader = StationLoader()
+        genres = loader.get_genres()
+        for genre in genres:
+            btn = Button(text=genre.name, size_hint_y=None, height=20)
+            btn.bind(on_release=lambda btn: self.select(btn.text))
+            self.add_widget(btn)
+
+    def select(self, data):
+        print "Clicked " + data
+
 class PlaylistSearcher(BoxLayout):
-    station_id = ObjectProperty(None)
+    list_type = ObjectProperty(None)
     station_list = ObjectProperty(None)
     
     def __init__(self, **kwargs):
@@ -28,7 +38,7 @@ class PlaylistSearcher(BoxLayout):
         
     def download(self):
         print "PlaylistSearcher go!"
-        print "Station: " + self.station_id.text
+        # print "Station: " + self.station_id.text
         #station_id = self.station_id.text
         #print "you -==========" + self.station_id.text
         #StationDownloader(station_id)
