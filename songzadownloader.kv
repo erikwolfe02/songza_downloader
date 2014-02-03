@@ -1,38 +1,33 @@
 #:kivy 1.8.0
+#:import Factory kivy.factory.Factory
 
-<ListDropDown>:
-    id: list_drop_down
-    size_hint_y: None
-    height: root.height/10
+#:set color_button (0.784, 0.443, 0.216, 1)  # brown
+#:set color_button_pressed (0.659, 0.522, 0.431, 1)  # darker brown
+#:set color_font   (0.957, 0.890, 0.843, 1)  # off white
 
-<PlaylistSearcher>:
-    station_list: station_list
-    list_type: list_type
-    ListDropDown:
-        id: list_type
-    StationList:
-        id: station_list
-        height: root.height * .9
-        do_scroll_x: False
+<MySpinnerOption@SpinnerOption>:
+    background_color: color_button if self.state == 'down' else color_button_pressed
+    color: color_font
 
 <StationListingItem>:
     size_hint_y: None
     size_hint_x: None
     height: 200
     width: 200
-            
+
 <PlaylistDetails>:
     Button:
         id: f_but
         text: "Download"
         on_release: root.download()
-                
+
 <PlaylistDownloader>:
     Label:
         text: "Download"
-            
+
 <DownloaderWrapper>:
-    playlist_searcher: playlist_searcher
+    id: main_screen
+    playlist_search_panel: playlist_search_panel
     playlist_details: playlist_details
     playlist_downloader: playlist_downloader
 #    canvas.before:
@@ -40,12 +35,26 @@
 #            size: self.size
 #            source: 'assets/background-gradient.png'
     BoxLayout:
-        PlaylistSearcher:
-            id: playlist_searcher
+        PlaylistSearchPanel:
+            station_list: station_list
+            genre_list: genre_list
+            id: playlist_search_panel
             orientation: "vertical"
             size_hint: None, None
             height:root.height
             width: root.width/4
+            GenreSpinner:
+                id: genre_list
+                size_hint_y: None
+                height: root.height * .1
+                background_color: color_button if self.state == 'normal' else color_button_pressed
+                color: color_font
+                option_cls: Factory.get("MySpinnerOption")
+                on_text: playlist_search_panel.genre_picked(args[1])
+            StationList:
+                id: station_list
+                height: root.height * .9
+                do_scroll_x: False
         PlaylistDetails:
             id: playlist_details
             orientation: "vertical"

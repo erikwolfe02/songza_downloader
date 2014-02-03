@@ -115,7 +115,7 @@ class StationDownloader:
     def _get_next_song(self):
         return self._get_json(self._session_url + "/next")
 
-    @atexit.register
+    # @atexit.register
     def _remove_temp_file(self):
         os.remove("audiodump.wav")
 
