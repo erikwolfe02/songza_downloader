@@ -2,18 +2,27 @@
 # For research purposes only
 import urllib2
 import json
+import threading
 
 
-class StationLoader:
+class StationLoader (threading.Thread):
     _stations = []
     _opener = urllib2.build_opener()
     _request_url = "http://songza.com/api/1/station/"
 
-    def __init__(self, stations):
+    def __init__(self, stations, callback, threadId="stationLoaderThread"):
+        threading.Thread.__init__(self)
+        self.thread_id = threadId
         self.stations = stations
+        self.callback = callback
+
+    def run(self, ):
+        print "Starting to load Stations..."
         self.load_stations()
+        self.callback()
 
     def load_stations(self):
+        self._stations = []
         for station_id in self.stations:
             station_json = self._get_json(self._request_url + str(station_id))
             self._add_station(station_json)

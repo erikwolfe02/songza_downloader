@@ -10,9 +10,8 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.spinner import Spinner
 from kivy.uix.button import Button
-from kivy.uix.label import Label
+from kivy.clock import mainthread
 from kivy.properties import ObjectProperty
-from kivy.uix.dropdown import DropDown
 
 
 class DownloaderWrapper(BoxLayout):
@@ -43,6 +42,7 @@ class GenreSpinner(Spinner):
 
 class PlaylistSearchPanel(BoxLayout):
     station_info = None
+    current_genre_from_list = None
 
     genre_list = ObjectProperty(None)
     station_list = ObjectProperty(None)
@@ -59,15 +59,21 @@ class PlaylistSearchPanel(BoxLayout):
         #StationDownloader(station_id)
         #StationDownloader("1390998")
 
-    def genre_picked(self, genre):
-        chosen_genre = self.genre_list.get_genre(genre)
-        print "========1"
+    def genre_picked(self, selected_genre):
+        if self.current_genre_from_list == selected_genre:
+            print "Same genre - do nothing"
+            return
+
+        self.genre = selected_genre
+        chosen_genre = self.genre_list.get_genre(self.genre)
         if chosen_genre is not None:
-            print "========2"
-            stationLoader = StationLoader(chosen_genre.station_ids)
-            station_info = stationLoader.get_stations()
-            print "========3"
-            self.station_list.update_list(station_info)
+            self.stationLoader = StationLoader(chosen_genre.station_ids, self.add_stations)
+            self.stationLoader.start()
+
+    @mainthread
+    def add_stations(self):
+        stations = self.stationLoader.get_stations()
+        self.station_list.update_list(stations)
 
 class PlaylistDetails(BoxLayout):
 
@@ -98,6 +104,7 @@ class PlaylistDownloader(BoxLayout):
 class StationList(ScrollView):
     layout = None
     collection = None
+
     def __init__(self, **kwargs):
         super(StationList, self).__init__(**kwargs)
 
@@ -106,16 +113,15 @@ class StationList(ScrollView):
         self.add_widget(self.layout)
 
     def update_list(self, collection):
-        print "About to update"
+
         if collection == self.collection:
+            print "Same station list - Nothing to update"
             return
-        else:
-            print "Clearing..."
-            self.layout.clear_widgets()
-            self.collection = collection
 
-        print "========4"
+        print "All done - updating UI"
+        self.collection = collection
 
+        self.layout.clear_widgets()
         for station in collection:
             btn = StationListingItem(text=str(station.name))
             self.layout.add_widget(btn)
