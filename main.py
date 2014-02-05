@@ -113,7 +113,6 @@ class StationList(ScrollView):
         self.add_widget(self.layout)
 
     def update_list(self, collection):
-
         if collection == self.collection:
             print "Same station list - Nothing to update"
             return

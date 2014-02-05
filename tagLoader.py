@@ -26,6 +26,7 @@ class TagLoader:
     def _get_json(self, url):
         response = self._opener.open(str(url))
         response_string = str(response.read())
+        print response_string
         return json.loads(response_string.encode('utf8'))
 
     def _add_to_list(self, genre_json):
