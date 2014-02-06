@@ -53,6 +53,7 @@ class PlaylistSearchPanel(BoxLayout):
 
     def __init__(self, **kwargs):
         super(PlaylistSearchPanel, self).__init__(**kwargs)
+        self.register_event_type('on_station_select')
 
     def download(self):
         print "PlaylistSearcher go!"
@@ -69,9 +70,15 @@ class PlaylistSearchPanel(BoxLayout):
 
         self.genre = selected_genre
         chosen_genre = self.genre_list.get_genre(self.genre)
+
+        self.station_list.add_station_selection_listener(self.on_station_select)
+
         if chosen_genre is not None:
             self.stationLoader = StationLoader(chosen_genre.station_ids, self.add_stations)
             self.stationLoader.start()
+
+    def on_station_select(self, station):
+        print "Picked a chillin " + str(station)
 
     @mainthread
     def add_stations(self, stations):
@@ -125,11 +132,14 @@ class StationList(ScrollView):
         self.collection = collection
         self.layout.clear_widgets()
         for station in collection:
-            item = StationListingItem(station, self.child_clicked)
+            item = StationListingItem(station, self.on_station_select)
             self.layout.add_widget(item)
 
-    def child_clicked(self, station):
-        print "child clicked " + station.name
+    def add_station_selection_listener(self, callback):
+        self.callback = callback
+
+    def on_station_select(self, station):
+        self.callback(station)
 
 
 class StationListingItem(Button):
@@ -161,8 +171,7 @@ class StationListingItem(Button):
 class SongzaDownloader(App):
 
     def build(self):
-        root = DownloaderWrapper()
-        return root
+        return DownloaderWrapper()
 
 if __name__ == '__main__':
     SongzaDownloader().run()
