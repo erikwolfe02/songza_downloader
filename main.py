@@ -1,5 +1,6 @@
 import kivy
 from kivy.core.window import Window
+from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 
@@ -11,8 +12,7 @@ from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.scrollview import ScrollView
-from kivy.uix.spinner import Spinner, SpinnerOption
-from kivy.uix.button import Button
+from kivy.uix.spinner import Spinner
 from kivy.clock import mainthread
 from kivy.properties import ObjectProperty
 
@@ -82,8 +82,11 @@ class PlaylistDetails(BoxLayout):
 
     def __init__(self, **kwargs):
         super(PlaylistDetails, self).__init__(**kwargs)
-        
-    def download(self):
+
+    def load_details(self, station):
+        print "You, you should load " + str(station)
+
+    # def download(self):
         print "PlaylistDetails go!"
         #station_id = self.station_id.text
         #print "you -==========" + self.station_id.text
@@ -122,28 +125,29 @@ class StationList(ScrollView):
         self.collection = collection
         self.layout.clear_widgets()
         for station in collection:
-            item = StationListingItem(station)
+            item = StationListingItem(station, self.child_clicked)
             self.layout.add_widget(item)
 
+    def child_clicked(self, station):
+        print "child clicked " + station.name
 
-class StationListingItem(Label, Widget):
-    def __init__(self, station, **kwargs):
+
+class StationListingItem(Button):
+    def __init__(self, station, child_click_callback, **kwargs):
         super(StationListingItem, self).__init__(**kwargs)
-        Window.bind(mouse_pos=self.mouse_hover)
         self.markup = True
         self.station = station
         self.text = self._create_text()
+        self.callback = child_click_callback
+
+    def on_release(self):
+        self.callback(self.station)
 
     def _create_text(self):
         label_text = "[size=16][b]"+str(self.station.name)+"[/b][/size]"
         label_text = label_text + "\n\n[size=12]"+self._build_description(self.station.description)+"[/size]"
         label_text = label_text + "\n\n[size=9]" + self.station.featured_artists_string+"[/size]"
         return label_text
-
-    def mouse_hover(self, instance, value):
-        # if self.collide_point(value):
-        #     print "OMG collision with " + self.text
-        pass
 
     def _build_description(self, description):
         if len(description) > 160:

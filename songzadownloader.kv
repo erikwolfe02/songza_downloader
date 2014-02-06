@@ -2,8 +2,8 @@
 #:import Factory kivy.factory.Factory
 
 #:set color_button (255, 255, 255, 1)  # white
-#:set color_button_pressed (255, 255, 255, 1)  # darker brown
-#:set color_font   (0, 0, 0, 1)  # off white
+#:set color_button_pressed (255, 255, 255, 1)  # white
+#:set color_font   (0, 0, 0, 1)  # black
 
 <TagSpinnerOption@SpinnerOption>:
     background_color: color_button if self.state == 'down' else color_button_pressed
@@ -14,14 +14,14 @@
     size_hint_x: None
     height: 225
     width: 200
+    background_color: (0, 0, 0, 1)
     text_size: 190, 225
     valign: "middle"
-    halign: "justify"
+    halign: "left"
     canvas:
         Rectangle:
             size:200, 1
             pos: self.pos
-
 
 <PlaylistDetails>:
     Button:
