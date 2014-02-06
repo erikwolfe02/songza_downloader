@@ -1,4 +1,7 @@
 import kivy
+from kivy.core.window import Window
+from kivy.uix.label import Label
+from kivy.uix.widget import Widget
 
 kivy.require('1.8.0')
 
@@ -8,7 +11,7 @@ from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.scrollview import ScrollView
-from kivy.uix.spinner import Spinner
+from kivy.uix.spinner import Spinner, SpinnerOption
 from kivy.uix.button import Button
 from kivy.clock import mainthread
 from kivy.properties import ObjectProperty
@@ -71,9 +74,9 @@ class PlaylistSearchPanel(BoxLayout):
             self.stationLoader.start()
 
     @mainthread
-    def add_stations(self):
-        stations = self.stationLoader.get_stations()
+    def add_stations(self, stations):
         self.station_list.update_list(stations)
+
 
 class PlaylistDetails(BoxLayout):
 
@@ -114,27 +117,47 @@ class StationList(ScrollView):
 
     def update_list(self, collection):
         if collection == self.collection:
-            print "Same station list - Nothing to update"
             return
 
-        print "All done - updating UI"
         self.collection = collection
-
         self.layout.clear_widgets()
         for station in collection:
-            btn = StationListingItem(text=str(station.name))
-            self.layout.add_widget(btn)
+            item = StationListingItem(station)
+            self.layout.add_widget(item)
 
 
-class StationListingItem(Button):
-    def __init__(self, **kwargs):
+class StationListingItem(Label, Widget):
+    def __init__(self, station, **kwargs):
         super(StationListingItem, self).__init__(**kwargs)
+        Window.bind(mouse_pos=self.mouse_hover)
+        self.markup = True
+        self.station = station
+        self.text = self._create_text()
+
+    def _create_text(self):
+        label_text = "[size=16][b]"+str(self.station.name)+"[/b][/size]"
+        label_text = label_text + "\n\n[size=12]"+self._build_description(self.station.description)+"[/size]"
+        label_text = label_text + "\n\n[size=9]" + self.station.featured_artists_string+"[/size]"
+        return label_text
+
+    def mouse_hover(self, instance, value):
+        # if self.collide_point(value):
+        #     print "OMG collision with " + self.text
+        pass
+
+    def _build_description(self, description):
+        if len(description) > 160:
+            description = description[:160]
+            index_of_last_space = description.rfind(" ")
+            description = description[:index_of_last_space]
+            return description + "..."
+        return description
 
 
 class SongzaDownloader(App):
 
     def build(self):
-        root =  DownloaderWrapper()
+        root = DownloaderWrapper()
         return root
 
 if __name__ == '__main__':

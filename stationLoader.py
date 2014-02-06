@@ -3,6 +3,7 @@
 import urllib2
 import json
 import threading
+from station import Station
 
 
 class StationLoader (threading.Thread):
@@ -16,10 +17,10 @@ class StationLoader (threading.Thread):
         self.stations = stations
         self.callback = callback
 
-    def run(self, ):
+    def run(self):
         print "Starting to load Stations..."
         self.load_stations()
-        self.callback()
+        self.callback(self._stations)
 
     def load_stations(self):
         self._stations = []
@@ -38,18 +39,7 @@ class StationLoader (threading.Thread):
         response_string = str(response.read())
         return json.loads(response_string.encode('utf8'))
 
-class Station:
-    def __init__(self, station_json):
-        self.dasherized_name = station_json['dasherized_name'].encode('utf8')
-        self.status = station_json['status'].encode('utf8')
-        self.name = station_json['name'].encode('utf8')
-        self.creator_name = station_json['creator_name'].encode('utf8')
-        self.url = station_json['url']
-        self.song_count = station_json['song_count']
-        self.cover_url = station_json['cover_url']
-        self.id = station_json['id']
-        self.description = station_json['description'].encode('utf8')
-        self.featured_artist = station_json['featured_artists']
+
 
 
 
