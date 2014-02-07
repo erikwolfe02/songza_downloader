@@ -1,3 +1,6 @@
+import urllib2
+
+
 class Station:
     def __init__(self, station_json):
         self.dasherized_name = station_json['dasherized_name'].encode('utf8')

@@ -18,7 +18,6 @@ class StationLoader (threading.Thread):
         self.callback = callback
 
     def run(self):
-        print "Starting to load Stations..."
         self.load_stations()
         self.callback(self._stations)
 

@@ -8,6 +8,9 @@
 <TagSpinnerOption@SpinnerOption>:
     background_color: color_button if self.state == 'down' else color_button_pressed
     color: color_font
+    valign: "middle"
+    halign: "center"
+    text_size: self.width-(self.width*.1), self.height
 
 <StationListingItem>:
     size_hint_y: None
@@ -24,10 +27,35 @@
             pos: self.pos
 
 <PlaylistDetails>:
+#    cover_image: cover_image
+    station_text_details: station_text_details
+    file_chooser: file_chooser
+    AsyncImage:
+        id: cover_image
+        valign: "middle"
+    Label:
+        id: station_text_details
+        size_hint_y: None
+        size_hint_x: None
+        height: 225
+        width: root.width
+        background_color: (1, 0, 0, 1)
+        text_size: 190, 225
+        markup: True
+        valign: "middle"
+        halign: "left"
+    FileChooserListView:
+        id: file_chooser
     Button:
-        id: f_but
-        text: "Download"
-        on_release: root.download()
+        text: "Start download"
+        size_hint_y: None
+        size_hint_x: None
+        size: 50, 20
+
+#    Button:
+#        id: f_but
+#        text: "Download"
+#        on_release: root.download()
 
 <PlaylistDownloader>:
     Label:
@@ -35,6 +63,14 @@
 
 <DownloaderWrapper>:
     id: main_screen
+    canvas:
+        Rectangle:
+            size:1, self.height
+            pos: self.width/4, 0
+        Rectangle:
+            size:1, self.height
+            pos: self.width/2 + 50, 0
+
     playlist_search_panel: playlist_search_panel
     playlist_details: playlist_details
     playlist_downloader: playlist_downloader

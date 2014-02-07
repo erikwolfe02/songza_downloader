@@ -1,8 +1,10 @@
 import kivy
 from kivy.core.window import Window
 from kivy.uix.button import Button
+from kivy.uix.image import AsyncImage
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
+import urllib2
 
 kivy.require('1.8.0')
 
@@ -14,7 +16,8 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.spinner import Spinner
 from kivy.clock import mainthread
-from kivy.properties import ObjectProperty
+from kivy.properties import ObjectProperty, StringProperty
+from kivy.uix.filechooser import FileChooserIconView, FileChooserListView
 
 
 class DownloaderWrapper(BoxLayout):
@@ -25,6 +28,12 @@ class DownloaderWrapper(BoxLayout):
     def __init__(self, **kwargs):
         super(DownloaderWrapper, self).__init__(**kwargs)
         pass
+
+    def attach_listeners(self):
+        self.playlist_search_panel.add_selection_listener(self.station_picked)
+
+    def station_picked(self, station):
+        self.playlist_details.load_station_details(station)
 
 
 class GenreSpinner(Spinner):
@@ -77,24 +86,46 @@ class PlaylistSearchPanel(BoxLayout):
             self.stationLoader = StationLoader(chosen_genre.station_ids, self.add_stations)
             self.stationLoader.start()
 
+    def add_selection_listener(self, callback):
+        self.parent_selection_listener = callback
+
     def on_station_select(self, station):
-        print "Picked a chillin " + str(station)
+        self.parent_selection_listener(station)
 
     @mainthread
     def add_stations(self, stations):
         self.station_list.update_list(stations)
 
 
-class PlaylistDetails(BoxLayout):
+class PlaylistDetails(GridLayout):
+    cover_image = ObjectProperty(None)
+    station_text_details = ObjectProperty(None)
+    file_chooser = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(PlaylistDetails, self).__init__(**kwargs)
+        self.cols = 1
+        self.size_hint = (None, None)
+        self.width = 200
+        self.padding = (20, 20)
 
-    def load_details(self, station):
-        print "You, you should load " + str(station)
+    def load_station_details(self, station):
+        self._create_layout(station)
+
+    def _create_layout(self, station):
+        print "==========" + station.cover_url
+        # self.cover_image.source = 'http\\://songza.com/api/1/station/1375125/image'
+
+        details_string = ""
+        details_string += "[b]Song Count:[/b] " + str(station.song_count)+"\n\n"
+        details_string += "[b]Created By:[/b] " + station.creator_name + "\n\n"
+        details_string += "[b]Featured Artists:[/b] \n"
+        details_string += station.featured_artists_string
+
+        self.station_text_details.text = str(details_string)
 
     # def download(self):
-        print "PlaylistDetails go!"
+    #     print "PlaylistDetails go!"
         #station_id = self.station_id.text
         #print "you -==========" + self.station_id.text
         #StationDownloader(station_id)
@@ -111,7 +142,7 @@ class PlaylistDownloader(BoxLayout):
         #station_id = self.station_id.text
         #print "you -==========" + self.station_id.text
         #StationDownloader(station_id)
-        #StationDownloader("1390998")   
+        #StationDownloader("1390998")
 
 
 class StationList(ScrollView):
@@ -171,7 +202,9 @@ class StationListingItem(Button):
 class SongzaDownloader(App):
 
     def build(self):
-        return DownloaderWrapper()
+        root = DownloaderWrapper()
+        root.attach_listeners()
+        return root
 
 if __name__ == '__main__':
     SongzaDownloader().run()
