@@ -1,15 +1,20 @@
 import kivy
 from kivy.core.window import Window
+from kivy.loader import Loader
 from kivy.uix.button import Button
 from kivy.uix.image import AsyncImage
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
+import os
+import shutil
+import threading
 import urllib2
 
 kivy.require('1.8.0')
 
 from stationLoader import StationLoader
 from tagLoader import TagLoader
+from imageLoader import ImageLoader
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
@@ -76,7 +81,8 @@ class PlaylistSearchPanel(BoxLayout):
         if self.current_genre_from_list == selected_genre:
             print "Same genre - do nothing"
             return
-
+        file_manipulation_thread = threading.Thread(target=self.remove_album_images)
+        file_manipulation_thread.start()
         self.genre = selected_genre
         chosen_genre = self.genre_list.get_genre(self.genre)
 
@@ -92,15 +98,20 @@ class PlaylistSearchPanel(BoxLayout):
     def on_station_select(self, station):
         self.parent_selection_listener(station)
 
+    def remove_album_images(self):
+        shutil.rmtree("temp")
+        os.mkdir("temp")
+
     @mainthread
     def add_stations(self, stations):
         self.station_list.update_list(stations)
 
 
+
 class PlaylistDetails(GridLayout):
     cover_image = ObjectProperty(None)
     station_text_details = ObjectProperty(None)
-    file_chooser = ObjectProperty(None)
+    # file_chooser = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(PlaylistDetails, self).__init__(**kwargs)
@@ -113,9 +124,7 @@ class PlaylistDetails(GridLayout):
         self._create_layout(station)
 
     def _create_layout(self, station):
-        print "==========" + station.cover_url
-        # self.cover_image.source = 'http\\://songza.com/api/1/station/1375125/image'
-
+        self._download_album_art(station)
         details_string = ""
         details_string += "[b]Song Count:[/b] " + str(station.song_count)+"\n\n"
         details_string += "[b]Created By:[/b] " + station.creator_name + "\n\n"
@@ -123,6 +132,16 @@ class PlaylistDetails(GridLayout):
         details_string += station.featured_artists_string
 
         self.station_text_details.text = str(details_string)
+
+    def _download_album_art(self, station):
+        image_loader = ImageLoader(station.cover_url, station.dasherized_name, self.add_image)
+        image_loader.start()
+
+    @mainthread
+    def add_image(self, image_location):
+        print "About to set the image"
+        print image_location
+        self.cover_image.source = image_location
 
     # def download(self):
     #     print "PlaylistDetails go!"

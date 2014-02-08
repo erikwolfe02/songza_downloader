@@ -27,11 +27,15 @@
             pos: self.pos
 
 <PlaylistDetails>:
-#    cover_image: cover_image
+    cover_image: cover_image
     station_text_details: station_text_details
-    file_chooser: file_chooser
-    AsyncImage:
+#    file_chooser: file_chooser
+    Image:
         id: cover_image
+        size_hint_x: None
+        size_hint_y: None
+        width: 120
+        height: 120
         valign: "middle"
     Label:
         id: station_text_details
@@ -44,8 +48,8 @@
         markup: True
         valign: "middle"
         halign: "left"
-    FileChooserListView:
-        id: file_chooser
+#    FileChooserListView:
+#        id: file_chooser
     Button:
         text: "Start download"
         size_hint_y: None
