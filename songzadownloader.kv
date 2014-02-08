@@ -26,16 +26,34 @@
             size:200, 1
             pos: self.pos
 
+<LoadDialog>:
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+        FileChooserListView:
+            id: filechooser
+
+        BoxLayout:
+            size_hint_y: None
+            height: 30
+            Button:
+                text: "Cancel"
+                on_release: root.cancel()
+
+            Button:
+                text: "Load"
+                on_release: root.load(filechooser.path, filechooser.selection)
+
 <PlaylistDetails>:
     cover_image: cover_image
     station_text_details: station_text_details
-#    file_chooser: file_chooser
+    download_dir: download_dir
     Image:
         id: cover_image
+        source: "assets/image-loading.gif"
         size_hint_x: None
         size_hint_y: None
-        width: 120
-        height: 120
         valign: "middle"
     Label:
         id: station_text_details
@@ -48,8 +66,14 @@
         markup: True
         valign: "middle"
         halign: "left"
-#    FileChooserListView:
-#        id: file_chooser
+    TextInput:
+        id: download_dir
+        size_hint_y: None
+        size_hint_x: None
+        size: 100, 40
+        hint_text: "save dir"
+        on_focus: root.show_load()
+
     Button:
         text: "Start download"
         size_hint_y: None
@@ -73,7 +97,7 @@
             pos: self.width/4, 0
         Rectangle:
             size:1, self.height
-            pos: self.width/2 + 50, 0
+            pos: .6 * self.width, 0
 
     playlist_search_panel: playlist_search_panel
     playlist_details: playlist_details

@@ -1,14 +1,12 @@
 import kivy
-from kivy.core.window import Window
-from kivy.loader import Loader
 from kivy.uix.button import Button
-from kivy.uix.image import AsyncImage
+from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
-from kivy.uix.widget import Widget
+from kivy.uix.popup import Popup
+from kivy.uix.textinput import TextInput
 import os
 import shutil
 import threading
-import urllib2
 
 kivy.require('1.8.0')
 
@@ -21,8 +19,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.spinner import Spinner
 from kivy.clock import mainthread
-from kivy.properties import ObjectProperty, StringProperty
-from kivy.uix.filechooser import FileChooserIconView, FileChooserListView
+from kivy.properties import ObjectProperty
 
 
 class DownloaderWrapper(BoxLayout):
@@ -39,6 +36,16 @@ class DownloaderWrapper(BoxLayout):
 
     def station_picked(self, station):
         self.playlist_details.load_station_details(station)
+
+
+class PlaylistDetailsLabel(Label):
+    def __init__(self, **kwargs):
+        super(PlaylistDetailsLabel, self).__init__(**kwargs)
+
+
+class DownloadButton(Button):
+    def __init__(self, **kwargs):
+        super(DownloadButton, self).__init__(**kwargs)
 
 
 class GenreSpinner(Spinner):
@@ -69,17 +76,8 @@ class PlaylistSearchPanel(BoxLayout):
         super(PlaylistSearchPanel, self).__init__(**kwargs)
         self.register_event_type('on_station_select')
 
-    def download(self):
-        print "PlaylistSearcher go!"
-        # print "Station: " + self.station_id.text
-        #station_id = self.station_id.text
-        #print "you -==========" + self.station_id.text
-        #StationDownloader(station_id)
-        #StationDownloader("1390998")
-
     def genre_picked(self, selected_genre):
         if self.current_genre_from_list == selected_genre:
-            print "Same genre - do nothing"
             return
         file_manipulation_thread = threading.Thread(target=self.remove_album_images)
         file_manipulation_thread.start()
@@ -106,19 +104,35 @@ class PlaylistSearchPanel(BoxLayout):
     def add_stations(self, stations):
         self.station_list.update_list(stations)
 
-
+class LoadDialog(FloatLayout):
+    load = ObjectProperty(None)
+    cancel = ObjectProperty(None)
 
 class PlaylistDetails(GridLayout):
     cover_image = ObjectProperty(None)
     station_text_details = ObjectProperty(None)
+    download_button = ObjectProperty(None)
+    download_dir = ObjectProperty(None)
     # file_chooser = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(PlaylistDetails, self).__init__(**kwargs)
         self.cols = 1
         self.size_hint = (None, None)
-        self.width = 200
+        self.width = 225
         self.padding = (20, 20)
+
+    def show_load(self):
+        content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
+        self._popup = Popup(title="Load file", content=content, size_hint=(0.9, 0.9))
+        self._popup.open()
+
+    def load(self, path, filename):
+        self.download_dir.text = path
+        self.dismiss_popup()
+
+    def cancel(self):
+        self.dismiss_popup()
 
     def load_station_details(self, station):
         self._create_layout(station)
@@ -130,12 +144,15 @@ class PlaylistDetails(GridLayout):
         details_string += "[b]Created By:[/b] " + station.creator_name + "\n\n"
         details_string += "[b]Featured Artists:[/b] \n"
         details_string += station.featured_artists_string
-
         self.station_text_details.text = str(details_string)
 
     def _download_album_art(self, station):
         image_loader = ImageLoader(station.cover_url, station.dasherized_name, self.add_image)
         image_loader.start()
+
+    def dismiss_popup(self):
+        self._popup.dismiss()
+        self.remove_widget(self._popup)
 
     @mainthread
     def add_image(self, image_location):
