@@ -116,6 +116,8 @@ class PlaylistDetails(GridLayout):
     station_text_details = ObjectProperty(None)
     download_button = ObjectProperty(None)
     download_dir = ObjectProperty(None)
+
+    _station = None
     # file_chooser = ObjectProperty(None)
 
     def __init__(self, **kwargs):
@@ -162,10 +164,17 @@ class PlaylistDetails(GridLayout):
         self.cover_image.source = image_location
 
     def download(self):
+        if self.download_dir.text is None or self.download_dir.text == "":
+            self.download_dir.background_color = (1, .1, .13, 1)
+            return
+            # StationDownloader(station_id)
+        if self._station is None:
+            self.station_text_details.text = "[b][size=20]Please pick a station[/size][/b]"
+            return
         print "PlaylistDetails go!"
         station_id = self._station.id
         print self._station.name
-        # StationDownloader(station_id)
+
 
 class PlaylistDownloader(BoxLayout):
 

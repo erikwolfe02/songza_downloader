@@ -15,7 +15,7 @@
 <StationListingItem>:
     size_hint_y: None
     size_hint_x: None
-    background_color: (0, 0, 0, 1)
+    background_color: (0, 0, 0, 0)
     text_size: 190, 225
     valign: "middle"
     halign: "left"
@@ -75,8 +75,8 @@
         background_color: white
         size_hint_y: None
         size_hint_x: None
-        size: root.width - 20, 45
-        hint_text: "save dir"
+        size: root.width - 20, 35
+        hint_text: "save directory..."
         on_focus: root.show_load()
     Button:
         text: "Start download"
@@ -94,10 +94,10 @@
     playlist_search_panel: playlist_search_panel
     playlist_details: playlist_details
     playlist_downloader: playlist_downloader
-#    canvas.before:
-#        Rectangle:
-#            size: self.size
-#            source: 'assets/background-gradient.png'
+    canvas.before:
+        Rectangle:
+            size: self.size
+            source: 'assets/background-gradient.png'
     BoxLayout:
         PlaylistSearchPanel:
             station_list: station_list
