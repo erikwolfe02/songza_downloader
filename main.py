@@ -7,6 +7,7 @@ from kivy.uix.textinput import TextInput
 import os
 import shutil
 import threading
+from stationDownloader import StationDownloader
 
 kivy.require('1.8.0')
 
@@ -104,9 +105,11 @@ class PlaylistSearchPanel(BoxLayout):
     def add_stations(self, stations):
         self.station_list.update_list(stations)
 
+
 class LoadDialog(FloatLayout):
     load = ObjectProperty(None)
     cancel = ObjectProperty(None)
+
 
 class PlaylistDetails(GridLayout):
     cover_image = ObjectProperty(None)
@@ -117,10 +120,7 @@ class PlaylistDetails(GridLayout):
 
     def __init__(self, **kwargs):
         super(PlaylistDetails, self).__init__(**kwargs)
-        self.cols = 1
-        self.size_hint = (None, None)
-        self.width = 225
-        self.padding = (20, 20)
+
 
     def show_load(self):
         content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
@@ -135,6 +135,7 @@ class PlaylistDetails(GridLayout):
         self.dismiss_popup()
 
     def load_station_details(self, station):
+        self._station = station
         self._create_layout(station)
 
     def _create_layout(self, station):
@@ -151,8 +152,8 @@ class PlaylistDetails(GridLayout):
         image_loader.start()
 
     def dismiss_popup(self):
-        self._popup.dismiss()
-        self.remove_widget(self._popup)
+        self._popup.dismiss(force=True, animation=False)
+        # self.remove_widget(self._popup)
 
     @mainthread
     def add_image(self, image_location):
@@ -160,13 +161,11 @@ class PlaylistDetails(GridLayout):
         print image_location
         self.cover_image.source = image_location
 
-    # def download(self):
-    #     print "PlaylistDetails go!"
-        #station_id = self.station_id.text
-        #print "you -==========" + self.station_id.text
-        #StationDownloader(station_id)
-        #StationDownloader("1390998")
-
+    def download(self):
+        print "PlaylistDetails go!"
+        station_id = self._station.id
+        print self._station.name
+        # StationDownloader(station_id)
 
 class PlaylistDownloader(BoxLayout):
 
@@ -199,7 +198,7 @@ class StationList(ScrollView):
         self.collection = collection
         self.layout.clear_widgets()
         for station in collection:
-            item = StationListingItem(station, self.on_station_select)
+            item = StationListingItem(station, self.on_station_select, size=(self.width, 225), text_size=(self.width*.9, 255))
             self.layout.add_widget(item)
 
     def add_station_selection_listener(self, callback):

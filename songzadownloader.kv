@@ -1,12 +1,12 @@
 #:kivy 1.8.0
 #:import Factory kivy.factory.Factory
 
-#:set color_button (255, 255, 255, 1)  # white
+#:set white (255, 255, 255, 1)  # white
 #:set color_button_pressed (255, 255, 255, 1)  # white
 #:set color_font   (0, 0, 0, 1)  # black
 
 <TagSpinnerOption@SpinnerOption>:
-    background_color: color_button if self.state == 'down' else color_button_pressed
+    background_color: white if self.state == 'down' else white
     color: color_font
     valign: "middle"
     halign: "center"
@@ -15,15 +15,13 @@
 <StationListingItem>:
     size_hint_y: None
     size_hint_x: None
-    height: 225
-    width: 200
     background_color: (0, 0, 0, 1)
     text_size: 190, 225
     valign: "middle"
     halign: "left"
-    canvas:
+    canvas.after:
         Rectangle:
-            size:200, 1
+            size:self.width, 1
             pos: self.pos
 
 <LoadDialog>:
@@ -49,6 +47,13 @@
     cover_image: cover_image
     station_text_details: station_text_details
     download_dir: download_dir
+    canvas.after:
+        Rectangle:
+            size:1, root.height
+            pos: root.right, 0
+        Rectangle:
+            size:1, root.height
+            pos: root.x, 0
     Image:
         id: cover_image
         source: "assets/image-loading.gif"
@@ -60,30 +65,25 @@
         size_hint_y: None
         size_hint_x: None
         height: 225
-        width: root.width
-        background_color: (1, 0, 0, 1)
-        text_size: 190, 225
+        width: root.width - 20
+        text_size: root.width - 20, 225
         markup: True
         valign: "middle"
         halign: "left"
     TextInput:
         id: download_dir
+        background_color: white
         size_hint_y: None
         size_hint_x: None
-        size: 100, 40
+        size: root.width - 20, 45
         hint_text: "save dir"
         on_focus: root.show_load()
-
     Button:
         text: "Start download"
         size_hint_y: None
         size_hint_x: None
-        size: 50, 20
-
-#    Button:
-#        id: f_but
-#        text: "Download"
-#        on_release: root.download()
+        size: root.width - 20, 30
+        on_release: root.download()
 
 <PlaylistDownloader>:
     Label:
@@ -91,14 +91,6 @@
 
 <DownloaderWrapper>:
     id: main_screen
-    canvas:
-        Rectangle:
-            size:1, self.height
-            pos: self.width/4, 0
-        Rectangle:
-            size:1, self.height
-            pos: .6 * self.width, 0
-
     playlist_search_panel: playlist_search_panel
     playlist_details: playlist_details
     playlist_downloader: playlist_downloader
@@ -114,12 +106,12 @@
             orientation: "vertical"
             size_hint: None, None
             height:root.height
-            width: root.width/4
+            width: root.width *.33
             GenreSpinner:
                 id: genre_list
                 size_hint_y: None
                 height: root.height * .05
-                background_color: color_button if self.state == 'normal' else color_button_pressed
+                background_color: white if self.state == 'normal' else white
                 color: color_font
                 option_cls: Factory.get("TagSpinnerOption")
                 on_text: playlist_search_panel.genre_picked(args[1])
@@ -133,11 +125,16 @@
             orientation: "vertical"
             size_hint: None, None
             height:root.height
-            width: root.width/4
+            width: root.width * .33
+            cols: 1
+            size_hint: (None, None)
+            padding: (10, 20)
+            spacing: (20, 20)
+
         PlaylistDownloader:
             id: playlist_downloader
             orientation: "vertical"
             size_hint: None, None
             height:root.height
-            width: root.width/2
+            width: root.width *.33
         
