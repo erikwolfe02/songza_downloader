@@ -1,4 +1,6 @@
 import kivy
+from kivy.core.window import Window
+
 kivy.require('1.8.0')
 
 from kivy.uix.button import Button
@@ -84,7 +86,7 @@ class StationList(ScrollView):
         self.collection = collection
         self.layout.clear_widgets()
         for station in collection:
-            item = StationListingItem(station, self.on_station_select, size=(self.width, 225), text_size=(self.width*.9, 255))
+            item = StationListingItem(station, self.layout, self.on_station_select, size=(self.width, 225), text_size=(self.width*.9, 255))
             self.layout.add_widget(item)
 
     def add_station_selection_listener(self, callback):
@@ -95,14 +97,18 @@ class StationList(ScrollView):
 
 
 class StationListingItem(Button):
-    def __init__(self, station, child_click_callback, **kwargs):
+    def __init__(self, station, wrapper, child_click_callback, **kwargs):
         super(StationListingItem, self).__init__(**kwargs)
         self.markup = True
         self.station = station
+        self.wrapper = wrapper
         self.text = self._create_text()
         self.callback = child_click_callback
 
     def on_release(self):
+        for child in self.wrapper.children:
+            child.background_color = (0, 0, 0, 0)
+        self.background_color = (0, .76, .8, 1)
         self.callback(self.station)
 
     def _create_text(self):
@@ -196,11 +202,6 @@ class PlaylistDetails(GridLayout):
     def add_download_listener(self, callback):
         self.download_listener = callback
 
-    def update_widths(self):
-        print "UPDATE!!!!!!!!!!!!!!!!!1"
-        self.download_button.width = self.width - 20
-        self.download_dir.width = self.width - 20
-
     def _create_layout(self, station):
         self._download_album_art(station)
         details_string = ""
@@ -216,7 +217,6 @@ class PlaylistDetails(GridLayout):
 
     def dismiss_popup(self):
         self._popup.dismiss(force=True, animation=False)
-        # self.remove_widget(self._popup)
 
     @mainthread
     def add_image(self, image_location):
