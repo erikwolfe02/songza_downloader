@@ -43,6 +43,32 @@
                 text: "Load"
                 on_release: root.load(filechooser.path, filechooser.selection)
 
+<StatusContainer>:
+    orientation: "vertical"
+
+<StatusEntry>:
+    status_icon: status_icon
+    song_name: song_name
+    orientation: "horizontal"
+    height: 75
+    padding: 10, 10
+    spacing: 5, 5
+    Image:
+        id: status_icon
+        size_hint: None, None
+        size: 30, 30
+        valign: "middle"
+        source: "assets/status_in_progress.png"
+    Label:
+        id: song_name
+        size_hint: None, None
+        height: 30
+        width: root.width - 20
+        text_size: root.width - 20, 40
+        markup: True
+        valign: "middle"
+        halign: "left"
+
 <PlaylistDetails>:
     cover_image: cover_image
     station_text_details: station_text_details
@@ -56,7 +82,7 @@
             pos: root.x, 0
     Image:
         id: cover_image
-        source: "assets/image-loading.gif"
+        source: "assets/empty.png"
         size_hint_x: None
         size_hint_y: None
         valign: "middle"
@@ -85,9 +111,6 @@
         size: root.width - 20, 30
         on_release: root.download()
 
-<PlaylistDownloader>:
-    Label:
-        text: "Download"
 
 <DownloaderWrapper>:
     id: main_screen
@@ -106,7 +129,7 @@
             orientation: "vertical"
             size_hint: None, None
             height:root.height
-            width: root.width *.33
+            width: root.width *.333
             GenreSpinner:
                 id: genre_list
                 size_hint_y: None
@@ -125,16 +148,28 @@
             orientation: "vertical"
             size_hint: None, None
             height:root.height
-            width: root.width * .33
+            width: root.width * .333
             cols: 1
-            size_hint: (None, None)
-            padding: (10, 20)
-            spacing: (20, 20)
+            size_hint: None, None
+            padding: 10, 20
+            spacing: 20, 20
 
         PlaylistDownloader:
             id: playlist_downloader
+            scroll_list: scroll_list
+            status_container: status_container
             orientation: "vertical"
             size_hint: None, None
             height:root.height
-            width: root.width *.33
-        
+            width: root.width *.333
+            padding: 10, 20
+            ScrollView:
+                id: scroll_list
+                height:root.height * .9
+                width: root.width *.33
+                do_scroll_x: False
+                StatusContainer:
+                    id: status_container
+                    size_hint: None, None
+                    width: root.width
+                    height: root.height

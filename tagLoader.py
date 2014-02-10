@@ -1,5 +1,3 @@
-# -*- coding: UTF-8 -*-
-# For research purposes only
 import urllib2
 import json
 from genre import Genre
@@ -12,7 +10,6 @@ class TagLoader:
 
     def __init__(self):
         self._populate_genres()
-        # matches = [genre for genre in self._genres if genre.name.find("Classic") != -1]
 
     def get_genres(self):
         return self._genres

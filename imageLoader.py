@@ -3,6 +3,7 @@ import shutil
 import threading
 import urllib2
 
+
 class ImageLoader(threading.Thread):
     def __init__(self, image_url, image_name, callback, threadId="imageLoaderThread"):
         threading.Thread.__init__(self)
