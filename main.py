@@ -39,12 +39,16 @@ class DownloaderWrapper(BoxLayout):
     def attach_listeners(self):
         self.playlist_search_panel.add_selection_listener(self.station_picked)
         self.playlist_details.add_download_listener(self.download_listener)
+        self.playlist_details.add_stop_download_listener(self.stop_download_listener)
 
     def station_picked(self, station):
         self.playlist_details.load_station_details(station)
 
     def download_listener(self, station, save_location):
         self.playlist_downloader.begin_download(station, save_location)
+
+    def stop_download_listener(self):
+        self.playlist_downloader.stop_download()
 
 
 class PlaylistDetailsLabel(Label):
@@ -202,6 +206,9 @@ class PlaylistDetails(GridLayout):
     def add_download_listener(self, callback):
         self.download_listener = callback
 
+    def add_stop_download_listener(self, callback):
+        self.stop_download_listener = callback
+
     def _create_layout(self, station):
         self._download_album_art(station)
         details_string = ""
@@ -233,22 +240,30 @@ class PlaylistDetails(GridLayout):
             self.download_dir.background_color = (255, 255, 255, 1)
         self.download_listener(self._station, self.download_dir.text)
 
+    def stop_download(self):
+        self.stop_download_listener()
+
 
 class PlaylistDownloader(BoxLayout):
     _current_song = None
     scroll_list = ObjectProperty(None)
     status_container = ObjectProperty(None)
     _progress_bar = None
+    _downloader = None
 
     def __init__(self, **kwargs):
         super(PlaylistDownloader, self).__init__(**kwargs)
 
     def begin_download(self, station, save_dir):
-        downloader = StationDownloader(station.id, self.song_status_listener, save_dir)
+        self._downloader = StationDownloader(station.id, self.song_status_listener, save_dir)
         if self._progress_bar is None:
             self._progress_bar = ProgressBar(max=4, size_hint=(None, None), width=self.width-20)
             self.add_widget(self._progress_bar)
-        downloader.start()
+        self._downloader.start()
+
+    def stop_download(self):
+        self.clear_widgets()
+        self._downloader.stop()
 
     @mainthread
     def song_status_listener(self, song, status, isSuccessful):

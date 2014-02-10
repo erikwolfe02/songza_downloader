@@ -64,7 +64,7 @@
         size_hint: None, None
         height: 30
         width: root.width - 20
-        text_size: root.width - 20, 40
+        text_size: root.width - 20, 75
         markup: True
         valign: "middle"
         halign: "left"
@@ -106,10 +106,18 @@
         on_focus: root.show_load()
     Button:
         text: "Start download"
+        background_color: (0, .76, .8, 1)
         size_hint_y: None
         size_hint_x: None
         size: root.width - 20, 30
         on_release: root.download()
+    Button:
+        text: "Stop download"
+        background_color: (0, .76, .8, 1)
+        size_hint_y: None
+        size_hint_x: None
+        size: root.width - 20, 30
+        on_release: root.stop_download()
 
 
 <DownloaderWrapper>:
