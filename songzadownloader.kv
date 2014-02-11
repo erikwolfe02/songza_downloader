@@ -88,8 +88,7 @@
         valign: "middle"
     Label:
         id: station_text_details
-        size_hint_y: None
-        size_hint_x: None
+        size_hint: None, None
         height: 225
         width: root.width - 20
         text_size: root.width - 20, 225
@@ -99,26 +98,22 @@
     TextInput:
         id: download_dir
         background_color: white
-        size_hint_y: None
-        size_hint_x: None
+        size_hint: None, None
         size: root.width - 20, 35
         hint_text: "save directory..."
         on_focus: root.show_load()
     Button:
         text: "Start download"
         background_color: (0, .76, .8, 1)
-        size_hint_y: None
-        size_hint_x: None
+        size_hint: None, None
         size: root.width - 20, 30
         on_release: root.download()
     Button:
         text: "Stop download"
         background_color: (0, .76, .8, 1)
-        size_hint_y: None
-        size_hint_x: None
+        size_hint: None, None
         size: root.width - 20, 30
         on_release: root.stop_download()
-
 
 <DownloaderWrapper>:
     id: main_screen
@@ -158,7 +153,6 @@
             height:root.height
             width: root.width * .333
             cols: 1
-            size_hint: None, None
             padding: 10, 20
             spacing: 20, 20
 

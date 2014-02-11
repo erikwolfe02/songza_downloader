@@ -1,13 +1,14 @@
 import re
 
+
 class Song:
     def __init__(self, song_json, album):
         self.song_json = song_json
         
-        self.artist = unicode(song_json['song']['artist']['name'])
-        self.title = unicode(song_json['song']['title'])
-        self.genre = unicode(song_json['song']['genre'])
-        self.album = unicode(album)
+        self.artist = song_json['song']['artist']['name'].encode('utf8')
+        self.title = song_json['song']['title'].encode('utf8')
+        self.genre = song_json['song']['genre'].encode('utf8')
+        self.album = album.encode('utf8')
         self.url = song_json['listen_url']
         self.id = song_json['song']['id']
     

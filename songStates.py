@@ -4,3 +4,4 @@ class SongStates():
     CONVERTING = 2
     SAVING = 3
     FINISHED = 4
+    PLAYLIST_COMPLETE = 5

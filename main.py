@@ -1,6 +1,6 @@
+from kivy.config import Config
+Config.set('graphics', 'resizable', 0)
 import kivy
-from kivy.core.window import Window
-
 kivy.require('1.8.0')
 
 from kivy.uix.button import Button
@@ -249,24 +249,41 @@ class PlaylistDownloader(BoxLayout):
     scroll_list = ObjectProperty(None)
     status_container = ObjectProperty(None)
     _progress_bar = None
+    _prog_count = None
     _downloader = None
+    _song_count_total = str(0)
+    _current_song_count = 0
 
     def __init__(self, **kwargs):
         super(PlaylistDownloader, self).__init__(**kwargs)
 
     def begin_download(self, station, save_dir):
+        self._song_count_total = str(station.song_count)
         self._downloader = StationDownloader(station.id, self.song_status_listener, save_dir)
         if self._progress_bar is None:
             self._progress_bar = ProgressBar(max=4, size_hint=(None, None), width=self.width-20)
+            self._prog_count = Label(size_hint=(None, None), size=(30, 15))
+            self._update_song_count_prog(0)
             self.add_widget(self._progress_bar)
+            self.add_widget(self._prog_count)
         self._downloader.start()
 
     def stop_download(self):
-        self.clear_widgets()
         self._downloader.stop()
+        self._reset_values()
+
+    def _update_song_count_prog(self, count):
+        self._prog_count.text = str(count) + "/" + self._song_count_total
+
+    @mainthread
+    def _reset_values(self):
+        self._progress_bar.value = 0
 
     @mainthread
     def song_status_listener(self, song, status, isSuccessful):
+        if status == SongStates.PLAYLIST_COMPLETE:
+            self._progress_bar.value = 0
+            return
         if self._current_song == song.id:
             print "Same song, update status"
             self._progress_bar.value += 1
@@ -274,6 +291,8 @@ class PlaylistDownloader(BoxLayout):
         else:
             print "New song, create a status"
             self._progress_bar.value = 0
+            self._current_song_count += 1
+            self._update_song_count_prog(self._current_song_count)
             self._current_song = song.id
             self._create_new_song_status(song, status, isSuccessful)
 

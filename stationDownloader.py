@@ -22,8 +22,6 @@ class StationDownloader(threading.Thread):
     _session_url = None
     _log_file = open('logfile', 'w')
     _downloaded_count = 0
-    convert_1 = None
-    convert_2 = None
     _stop = False
     
     def __init__(self, station_id, status_callback, filepath="~/temp"):
@@ -40,7 +38,6 @@ class StationDownloader(threading.Thread):
         print "Trying to stop......."
         self._stop = True
 
-
     def run(self):
         # Every album has an ID.  Given an id, this will find all the metadata for an album
         self.album_json = self._get_json(self._session_url)
@@ -51,11 +48,12 @@ class StationDownloader(threading.Thread):
         print "Downloading album " + self.album_name + "..." 
 
         self._ensure_dir_exists(self._album_path_builder(self.album_name))
-        
-        for current_song in range(self._song_count):
+
+        while self._downloaded_count != self._song_count:
+
+        # for current_song in range(self._song_count):
             if self._stop:
                 break
-            self._current_song = current_song
 
             the_song = Song(self._get_next_song(), self.album_name)
             path_to_song = self._file_path_builder(the_song)
@@ -65,9 +63,10 @@ class StationDownloader(threading.Thread):
                 self._process_next_track(the_song, path_to_song)
             else:
                 # 420 error occurs without a sleep.  Shorter time may work fine,
-                # don't need if we are converting though  
+                # don't need if we are converting though
+                self._downloaded_count += 1
                 time.sleep(2)
-
+        self._status_callback(the_song, SongStates.PLAYLIST_COMPLETE, True)
         print "Download complete!"
 
     def _process_next_track(self, the_song, path_to_song):
@@ -128,10 +127,10 @@ class StationDownloader(threading.Thread):
         self._convert_to_mp3_with_lame(song, file_path)
 
     def _convert_to_wav_for_lame(self, file_path):
-        self.convert_1 = subprocess.call([os.path.normpath("./tools/mplayer.exe"), "-novideo", "-msglevel",  "all=-1", "-nocorrect-pts", "-ao", "pcm:waveheader", file_path + ".mp4"], stdout=self._log_file, stderr=subprocess.STDOUT)
+        subprocess.call([os.path.normpath("./tools/mplayer.exe"), "-novideo", "-msglevel",  "all=-1", "-nocorrect-pts", "-ao", "pcm:waveheader", file_path + ".mp4"], stdout=self._log_file, stderr=subprocess.STDOUT)
     
     def _convert_to_mp3_with_lame(self, song, file_path):
-        self.convert_2 = subprocess.call([os.path.normpath("./tools/lame.exe"), "-h", "-S", "--vbr-new", "-T", "--add-id3v2", "--ta", song.artist, "--tt", song.title, "--tl", "Songza - " + song.album, "--tg", song.genre, "audiodump.wav", file_path + ".mp3"], stdout=self._log_file, stderr=subprocess.STDOUT)
+        subprocess.call([os.path.normpath("./tools/lame.exe"), "-h", "-S", "--vbr-new", "-T", "--add-id3v2", "--ta", song.artist, "--tt", song.title, "--tl", "Songza - " + song.album, "--tg", song.genre, "audiodump.wav", file_path + ".mp3"], stdout=self._log_file, stderr=subprocess.STDOUT)
         
         self._remove_temp_file()
         
@@ -141,7 +140,6 @@ class StationDownloader(threading.Thread):
     def _get_next_song(self):
         return self._get_json(self._session_url + "/next")
 
-    @atexit.register
     def _remove_temp_file(self):
         os.remove("audiodump.wav")
 
