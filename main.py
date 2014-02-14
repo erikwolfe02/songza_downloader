@@ -1,4 +1,6 @@
 from kivy.config import Config
+from kivy.uix.image import Image
+
 Config.set('graphics', 'resizable', 0)
 import kivy
 kivy.require('1.8.0')
@@ -116,7 +118,7 @@ class StationListingItem(Button):
         self.callback(self.station)
 
     def _create_text(self):
-        label_text = "[size=16][b]"+str(self.station.name)+"[/b][/size]"
+        label_text = "[size=16][b]" + str(self.station.name) + " - " + str(self.station.song_count) + "[/b][/size]"
         label_text = label_text + "\n\n[size=12]"+self._build_description(self.station.description)+"[/size]"
         label_text = label_text + "\n\n[size=9]" + self.station.featured_artists_string+"[/size]"
         return label_text
@@ -145,6 +147,7 @@ class PlaylistSearchPanel(BoxLayout):
     def genre_picked(self, selected_genre):
         if self.current_genre_from_list == selected_genre:
             return
+
         file_manipulation_thread = threading.Thread(target=self.remove_album_images)
         file_manipulation_thread.start()
         self.genre = selected_genre
@@ -153,6 +156,8 @@ class PlaylistSearchPanel(BoxLayout):
         self.station_list.add_station_selection_listener(self.on_station_select)
 
         if chosen_genre is not None:
+            self._loading_image = Image(source="assets/image-loading.gif")
+            self.add_widget(self._loading_image)
             self.stationLoader = StationLoader(chosen_genre.station_ids, self.add_stations)
             self.stationLoader.start()
 
@@ -168,6 +173,7 @@ class PlaylistSearchPanel(BoxLayout):
 
     @mainthread
     def add_stations(self, stations):
+        self.remove_widget(self._loading_image)
         self.station_list.update_list(stations)
 
 
@@ -281,15 +287,15 @@ class PlaylistDownloader(BoxLayout):
 
     @mainthread
     def song_status_listener(self, song, status, isSuccessful):
+        if status == SongStates.WARNING:
+            pass
         if status == SongStates.PLAYLIST_COMPLETE:
             self._progress_bar.value = 0
             return
         if self._current_song == song.id:
-            print "Same song, update status"
             self._progress_bar.value += 1
             self._update_existing_status(status, isSuccessful)
         else:
-            print "New song, create a status"
             self._progress_bar.value = 0
             self._current_song_count += 1
             self._update_song_count_prog(self._current_song_count)
@@ -327,7 +333,6 @@ class StatusEntry(BoxLayout):
         self.isSuccessful = isSuccessful
         self._create_status_led()
         self._create_text()
-        print "Created status entry..."
 
     def update_status_led(self, status, isSuccessful):
         self.status = status

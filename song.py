@@ -1,17 +1,21 @@
 import re
+import unicodedata
 
 
 class Song:
     def __init__(self, song_json, album):
         self.song_json = song_json
         
-        self.artist = song_json['song']['artist']['name'].encode('utf8')
-        self.title = song_json['song']['title'].encode('utf8')
-        self.genre = song_json['song']['genre'].encode('utf8')
-        self.album = album.encode('utf8')
+        self.artist = self.slugify(song_json['song']['artist']['name'])
+        self.title = self.slugify(song_json['song']['title'])
+        self.genre = song_json['song']['genre']
+        self.album = album
         self.url = song_json['listen_url']
         self.id = song_json['song']['id']
-    
-    # Replace any 'special'characters - rethink think this regex (maybe just encode better)
-    def replace_special_characters(self, text):
-        return re.sub('[^a-zA-Z0-9\n\.]', '-', text)
+
+    def slugify(self, value):
+        re_slugify = re.compile('[^\w\s-]', re.UNICODE)
+        value = unicodedata.normalize('NFKD', value)
+        value = unicode(re_slugify.sub('', value).strip())
+        value = re.sub('[-\s]+', '-', value)
+        return value

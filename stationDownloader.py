@@ -12,12 +12,13 @@ import time
 import re
 import atexit
 import subprocess
+import unicodedata
 from songStates import SongStates
 from song import Song
 
 
 class StationDownloader(threading.Thread):
-    _opener = urllib2.build_opener()
+    _opener = None
     _request_url = "http://songza.com/api/1/station/"
     _session_url = None
     _log_file = open('logfile', 'w')
@@ -48,24 +49,28 @@ class StationDownloader(threading.Thread):
         print "Downloading album " + self.album_name + "..." 
 
         self._ensure_dir_exists(self._album_path_builder(self.album_name))
-
+        while_count = 0
         while self._downloaded_count != self._song_count:
-
-        # for current_song in range(self._song_count):
-            if self._stop:
+            if self._stop or while_count < self._song_count * 3:
                 break
+            if while_count > self._song_count:
+                self._status_callback(the_song, SongStates.WARNING, False)
 
-            the_song = Song(self._get_next_song(), self.album_name)
-            path_to_song = self._file_path_builder(the_song)
+            song_json = self._get_next_song()
+            if song_json is not None:
+                the_song = Song(song_json, self.album_name)
+                path_to_song = self._file_path_builder(the_song)
 
-            if self._path_does_not_exist(path_to_song):
-                self._status_callback(the_song, SongStates.STARTED, False)
-                self._process_next_track(the_song, path_to_song)
+                if self._path_does_not_exist(path_to_song):
+                    self._status_callback(the_song, SongStates.STARTED, False)
+                    self._process_next_track(the_song, path_to_song)
+                else:
+                    # 420 error occurs without a sleep.  Shorter time may work fine,
+                    # don't need if we are converting though
+                    time.sleep(2)
             else:
-                # 420 error occurs without a sleep.  Shorter time may work fine,
-                # don't need if we are converting though
-                self._downloaded_count += 1
                 time.sleep(2)
+            while_count += 1
         self._status_callback(the_song, SongStates.PLAYLIST_COMPLETE, True)
         print "Download complete!"
 
@@ -113,28 +118,34 @@ class StationDownloader(threading.Thread):
         return ''.join(random.choice(chars) for x in range(size))
 
     def _get_json(self, url):
-        response = self._opener.open(str(url))
-        response_string = str(response.read())
-        return json.loads(response_string.encode('utf8'))
+        try:
+            response = self._opener.open(url)
+            response_string = response.read()
+            return json.loads(response_string)
+        except urllib2.HTTPError as e:
+            print str(e.msg) + " when trying to get " + url
+            self._create_session_id()
+            return None
 
     def _convert_file(self, song, file_path):
         filename = song.artist + "-" + song.title
         print "Converting %s.mp4 to %s.mp3" % (filename, filename)
-        
-        self._convert_to_wav_for_lame(file_path)
 
+        self._convert_to_wav_for_lame(file_path)
+        print "Successfully converted " + song.artist + " - " + song.title + " to WAV"
         self._status_callback(song, SongStates.SAVING, False)
         self._convert_to_mp3_with_lame(song, file_path)
+        print "Successfully converted " + song.artist + " - " + song.title + " to MP3"
 
     def _convert_to_wav_for_lame(self, file_path):
         subprocess.call([os.path.normpath("./tools/mplayer.exe"), "-novideo", "-msglevel",  "all=-1", "-nocorrect-pts", "-ao", "pcm:waveheader", file_path + ".mp4"], stdout=self._log_file, stderr=subprocess.STDOUT)
     
     def _convert_to_mp3_with_lame(self, song, file_path):
-        subprocess.call([os.path.normpath("./tools/lame.exe"), "-h", "-S", "--vbr-new", "-T", "--add-id3v2", "--ta", song.artist, "--tt", song.title, "--tl", "Songza - " + song.album, "--tg", song.genre, "audiodump.wav", file_path + ".mp3"], stdout=self._log_file, stderr=subprocess.STDOUT)
-        
+        subprocess.call([os.path.normpath("./tools/lame.exe"), "-h", "--vbr-new", "-T", "--add-id3v2", "--ta", song.artist, "--tt", song.title, "--tl", "Songza - " + song.album, "--tg", song.genre, "audiodump.wav", file_path + ".mp3"], stdout=self._log_file, stderr=subprocess.STDOUT)
         self._remove_temp_file()
         
     def _create_session_id(self):
+        self._opener = urllib2.build_opener()
         self._opener.addheaders.append(('Cookie', 'sessionid=%s' % str(self._session_id_generator())))
     
     def _get_next_song(self):

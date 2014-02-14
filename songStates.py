@@ -5,3 +5,4 @@ class SongStates():
     SAVING = 3
     FINISHED = 4
     PLAYLIST_COMPLETE = 5
+    WARNING = 6
