@@ -193,6 +193,10 @@ class PlaylistDetails(GridLayout):
     def __init__(self, **kwargs):
         super(PlaylistDetails, self).__init__(**kwargs)
 
+    def validate_text_input(self, instance, value):
+        if value is not None:
+            instance.background_color = (255, 255, 255, 1)
+
     def show_load(self):
         content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
         self._popup = Popup(title="Load file", content=content, size_hint=(0.9, 0.9))
@@ -254,6 +258,7 @@ class PlaylistDownloader(BoxLayout):
     _current_song = None
     scroll_list = ObjectProperty(None)
     status_container = ObjectProperty(None)
+    warning_label = ObjectProperty(None)
     _progress_bar = None
     _prog_count = None
     _downloader = None
@@ -284,13 +289,23 @@ class PlaylistDownloader(BoxLayout):
     @mainthread
     def _reset_values(self):
         self._progress_bar.value = 0
+        self.warning_label.color = (0, 0, 0, 0)
 
     @mainthread
     def song_status_listener(self, song, status, isSuccessful):
         if status == SongStates.WARNING:
-            pass
-        if status == SongStates.PLAYLIST_COMPLETE:
+            self.warning_label.color = (1, 0, 0, 1)
+            self.warning_label.text = "Error: Not all songs downloaded.\nTrying a few more times"
+            return
+        if (status == SongStates.PLAYLIST_COMPLETE) and isSuccessful:
             self._progress_bar.value = 0
+            self.warning_label.color = (0, 1, 0, 1)
+            self.warning_label.text = "Playlist complete"
+            return
+        if status == SongStates.PLAYLIST_COMPLETE and not isSuccessful:
+            self._progress_bar.value = 0
+            self.warning_label.color = (1, 0, 0, 1)
+            self.warning_label.text = "Playlist could not be downloaded.\nBlame Songza's service."
             return
         if self._current_song == song.id:
             self._progress_bar.value += 1

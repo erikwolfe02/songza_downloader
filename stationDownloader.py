@@ -49,11 +49,13 @@ class StationDownloader(threading.Thread):
         print "Downloading album " + self.album_name + "..." 
 
         self._ensure_dir_exists(self._album_path_builder(self.album_name))
-        while_count = 0
+        self._while_count = 0
         while self._downloaded_count != self._song_count:
-            if self._stop or while_count < self._song_count * 3:
+            self._status_callback(None, SongStates.PLAYLIST_COMPLETE, False)
+
+            if self._stop or self._while_count > self._song_count * 2:
                 break
-            if while_count > self._song_count:
+            if self._while_count > self._song_count:
                 self._status_callback(the_song, SongStates.WARNING, False)
 
             song_json = self._get_next_song()
@@ -70,8 +72,8 @@ class StationDownloader(threading.Thread):
                     time.sleep(2)
             else:
                 time.sleep(2)
-            while_count += 1
-        self._status_callback(the_song, SongStates.PLAYLIST_COMPLETE, True)
+            self._while_count += 1
+        self._status_callback(None, SongStates.PLAYLIST_COMPLETE, self._downloaded_count == self._song_count)
         print "Download complete!"
 
     def _process_next_track(self, the_song, path_to_song):
@@ -124,6 +126,7 @@ class StationDownloader(threading.Thread):
             return json.loads(response_string)
         except urllib2.HTTPError as e:
             print str(e.msg) + " when trying to get " + url
+            self._status_callback(None, SongStates.WARNING, False)
             self._create_session_id()
             return None
 

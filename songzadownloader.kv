@@ -4,6 +4,7 @@
 #:set white (255, 255, 255, 1)  # white
 #:set color_button_pressed (255, 255, 255, 1)  # white
 #:set color_font   (0, 0, 0, 1)  # black
+#:set transparent   (0, 0, 0, 0)  # transparent
 
 <TagSpinnerOption@SpinnerOption>:
     background_color: white if self.state == 'down' else white
@@ -15,7 +16,7 @@
 <StationListingItem>:
     size_hint_y: None
     size_hint_x: None
-    background_color: (0, 0, 0, 0)
+    background_color: transparent
     text_size: 190, 225
     valign: "middle"
     halign: "left"
@@ -99,6 +100,8 @@
         id: download_dir
         background_color: white
         size_hint: None, None
+        multiline: False
+        on_text: root.validate_text_input(args[0], args[1])
         size: root.width - 20, 35
         hint_text: "save directory..."
         on_focus: root.show_load()
@@ -160,11 +163,19 @@
             id: playlist_downloader
             scroll_list: scroll_list
             status_container: status_container
+            warning_label: warning_label
             orientation: "vertical"
             size_hint: None, None
             height:root.height
             width: root.width *.333
             padding: 10, 20
+            Label:
+                id: warning_label
+                size_hint: None, None
+                height: 50
+                width: root.width - 20
+                text_size: root.width - 20, 50
+                markup: True
             ScrollView:
                 id: scroll_list
                 height:root.height * .9
