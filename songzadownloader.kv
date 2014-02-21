@@ -5,6 +5,7 @@
 #:set color_button_pressed (255, 255, 255, 1)  # white
 #:set color_font   (0, 0, 0, 1)  # black
 #:set transparent   (0, 0, 0, 0)  # transparent
+#:set button_color (0, .76, .8, 1) #blue
 
 <TagSpinnerOption@SpinnerOption>:
     background_color: white if self.state == 'down' else white
@@ -24,6 +25,35 @@
         Rectangle:
             size:self.width, 1
             pos: self.pos
+
+<HelpDialog>:
+    help_dialog: help_dialog
+    RstDocument:
+        pos: root.pos
+        id: help_dialog
+        text:
+            ('.. _top:\n'
+            '\n'
+            'Hello world\n'
+            '===========\n'
+            '\n'
+            'This is an **emphased text**, *italic text*, ``interpreted text``.\n'
+            'And this is a reference to top_::\n'
+            '\n'
+            '	$ print("Hello world")\n'
+
+            'This downloader uses the Songza API that drives the Songza applications.  There are a few issues with the '
+            'api are that are beyond this application.\n \n'
+            '**1.** There\'s no guarantee that all the songs will be received from the service (each request results'
+            ' in a random song from the playlist).\n\n'
+            '**2.** The count of a playlist may not be accurate.  There are some cases where a playlist is expected to'
+            ' have x amount of songs, but it does not.\n\n'
+            '**3.** There is a fudge factor to to keep checking for songs multiple times if all songs weren\'t received'
+            '\n\n'
+            '**4.** ')
+
+
+
 
 <LoadDialog>:
     BoxLayout:
@@ -107,13 +137,13 @@
         on_focus: root.show_load()
     Button:
         text: "Start download"
-        background_color: (0, .76, .8, 1)
+        background_color: button_color
         size_hint: None, None
         size: root.width - 20, 30
         on_release: root.download()
     Button:
         text: "Stop download"
-        background_color: (0, .76, .8, 1)
+        background_color: button_color
         size_hint: None, None
         size: root.width - 20, 30
         on_release: root.stop_download()
@@ -164,11 +194,22 @@
             scroll_list: scroll_list
             status_container: status_container
             warning_label: warning_label
+            help_button: help_button
             orientation: "vertical"
             size_hint: None, None
             height:root.height
             width: root.width *.333
             padding: 10, 20
+            FloatLayout:
+                Button:
+                    id: help_button
+                    background_normal: "assets/help.png"
+                    background_down: "assets/help_down.png"
+                    size_hint: None, None
+                    height: 25
+                    width: 25
+                    pos: root.width - 30, 7
+                    on_release: playlist_downloader.open_help()
             Label:
                 id: warning_label
                 size_hint: None, None

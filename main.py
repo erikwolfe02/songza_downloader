@@ -182,6 +182,10 @@ class LoadDialog(FloatLayout):
     cancel = ObjectProperty(None)
 
 
+class HelpDialog(FloatLayout):
+    help_dialog = ObjectProperty(None)
+
+
 class PlaylistDetails(GridLayout):
     cover_image = ObjectProperty(None)
     station_text_details = ObjectProperty(None)
@@ -259,11 +263,13 @@ class PlaylistDownloader(BoxLayout):
     scroll_list = ObjectProperty(None)
     status_container = ObjectProperty(None)
     warning_label = ObjectProperty(None)
+    help_button = ObjectProperty(None)
     _progress_bar = None
     _prog_count = None
     _downloader = None
     _song_count_total = str(0)
     _current_song_count = 0
+    _songs_downloaded_in_session = []
 
     def __init__(self, **kwargs):
         super(PlaylistDownloader, self).__init__(**kwargs)
@@ -278,6 +284,11 @@ class PlaylistDownloader(BoxLayout):
             self.add_widget(self._progress_bar)
             self.add_widget(self._prog_count)
         self._downloader.start()
+
+    def open_help(self):
+        content = HelpDialog()
+        self._popup = Popup(title="About Songza Downloader", content=content, size_hint=(0.9, 0.9))
+        self._popup.open()
 
     def stop_download(self):
         self._downloader.stop()

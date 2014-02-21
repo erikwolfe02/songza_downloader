@@ -51,8 +51,6 @@ class StationDownloader(threading.Thread):
         self._ensure_dir_exists(self._album_path_builder(self.album_name))
         self._while_count = 0
         while self._downloaded_count != self._song_count:
-            self._status_callback(None, SongStates.PLAYLIST_COMPLETE, False)
-
             if self._stop or self._while_count > self._song_count * 2:
                 break
             if self._while_count > self._song_count:
@@ -67,6 +65,7 @@ class StationDownloader(threading.Thread):
                     self._status_callback(the_song, SongStates.STARTED, False)
                     self._process_next_track(the_song, path_to_song)
                 else:
+                    self._status_callback(the_song, SongStates.FINISHED, True)
                     # 420 error occurs without a sleep.  Shorter time may work fine,
                     # don't need if we are converting though
                     time.sleep(2)
