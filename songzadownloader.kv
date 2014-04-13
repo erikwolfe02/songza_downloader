@@ -1,0 +1,237 @@
+#:kivy 1.8.0
+#:import Factory kivy.factory.Factory
+
+#:set white (255, 255, 255, 1)  # white
+#:set color_button_pressed (255, 255, 255, 1)  # white
+#:set color_font   (0, 0, 0, 1)  # black
+#:set transparent   (0, 0, 0, 0)  # transparent
+#:set button_color (0, .76, .8, 1) #blue
+
+<TagSpinnerOption@SpinnerOption>:
+    background_color: white if self.state == 'down' else white
+    color: color_font
+    valign: "middle"
+    halign: "center"
+    text_size: self.width-(self.width*.1), self.height
+
+<StationListingItem>:
+    size_hint_y: None
+    size_hint_x: None
+    background_color: transparent
+    text_size: 190, 225
+    valign: "middle"
+    halign: "left"
+    canvas.after:
+        Rectangle:
+            size:self.width, 1
+            pos: self.pos
+
+<HelpDialog>:
+    help_dialog: help_dialog
+    RstDocument:
+        pos: root.pos
+        id: help_dialog
+        text:
+            ('.. _top:\n'
+            '\n'
+            'Hello world\n'
+            '===========\n'
+            '\n'
+            'This is an **emphased text**, *italic text*, ``interpreted text``.\n'
+            'And this is a reference to top_::\n'
+            '\n'
+            '	$ print("Hello world")\n'
+
+            'This downloader uses the Songza API that drives the Songza applications.  There are a few issues with the '
+            'api are that are beyond this application.\n \n'
+            '**1.** There\'s no guarantee that all the songs will be received from the service (each request results'
+            ' in a random song from the playlist).\n\n'
+            '**2.** The count of a playlist may not be accurate.  There are some cases where a playlist is expected to'
+            ' have x amount of songs, but it does not.\n\n'
+            '**3.** There is a fudge factor to to keep checking for songs multiple times if all songs weren\'t received'
+            '\n\n'
+            '**4.** ')
+
+<LoadDialog>:
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+        FileChooserListView:
+            id: filechooser
+
+        BoxLayout:
+            size_hint_y: None
+            height: 30
+            Button:
+                text: "Cancel"
+                on_release: root.cancel()
+
+            Button:
+                text: "Load"
+                on_release: root.load(filechooser.path, filechooser.selection)
+
+<StatusContainer>:
+    orientation: "vertical"
+
+<StatusEntry>:
+    status_icon: status_icon
+    song_name: song_name
+    orientation: "horizontal"
+    height: 75
+    padding: 10, 10
+    spacing: 5, 5
+    Image:
+        id: status_icon
+        size_hint: None, None
+        size: 30, 30
+        valign: "middle"
+        source: "assets/status_in_progress.png"
+    Label:
+        id: song_name
+        size_hint: None, None
+        height: 30
+        width: root.width - 20
+        text_size: root.width - 20, 75
+        markup: True
+        valign: "middle"
+        halign: "left"
+
+<PlaylistDetails>:
+    cover_image: cover_image
+    station_text_details: station_text_details
+    download_dir: download_dir
+    canvas.after:
+        Rectangle:
+            size:1, root.height
+            pos: root.right, 0
+        Rectangle:
+            size:1, root.height
+            pos: root.x, 0
+    Image:
+        id: cover_image
+        source: "assets/empty.png"
+        size_hint_x: None
+        size_hint_y: None
+        valign: "middle"
+    Label:
+        id: station_text_details
+        size_hint: None, None
+        height: 225
+        width: root.width - 20
+        text_size: root.width - 20, 225
+        markup: True
+        valign: "middle"
+        halign: "left"
+    TextInput:
+        id: download_dir
+        background_color: white
+        size_hint: None, None
+        multiline: False
+        on_text: root.validate_text_input(args[0], args[1])
+        size: root.width - 20, 35
+        hint_text: "save directory..."
+        on_focus: root.show_load()
+    Button:
+        text: "Start download"
+        background_color: button_color
+        size_hint: None, None
+        size: root.width - 20, 30
+        on_release: root.download()
+    Button:
+        text: "Stop download"
+        background_color: button_color
+        size_hint: None, None
+        size: root.width - 20, 30
+        on_release: root.stop_download()
+
+<DownloaderWrapper>:
+    id: main_screen
+    playlist_search_panel: playlist_search_panel
+    playlist_details: playlist_details
+    playlist_downloader: playlist_downloader
+    canvas.before:
+        Rectangle:
+            size: self.size
+            source: 'assets/background-gradient.png'
+    BoxLayout:
+        PlaylistSearchPanel:
+            station_list: station_list
+            genre_list: genre_list
+            playlist_filter_text: playlist_text_search
+            id: playlist_search_panel
+            orientation: "vertical"
+            size_hint: None, None
+            height:root.height
+            width: root.width *.333
+            TextInput:
+                id: playlist_text_search
+                size_hint_y: None
+                height: root.height * .05
+                hint_text: "Filter results"
+                on_text: playlist_search_panel.filter_results()
+            GenreSpinner:
+                id: genre_list
+                size_hint_y: None
+                height: root.height * .05
+                background_color: white if self.state == 'normal' else white
+                color: color_font
+                option_cls: Factory.get("TagSpinnerOption")
+                on_text: playlist_search_panel.genre_picked(args[1])
+                text: "Choose a genre"
+            StationList:
+                id: station_list
+                height: root.height * .95
+                do_scroll_x: False
+        PlaylistDetails:
+            id: playlist_details
+            orientation: "vertical"
+            size_hint: None, None
+            height:root.height
+            width: root.width * .333
+            cols: 1
+            padding: 10, 20
+            spacing: 20, 20
+
+        PlaylistDownloader:
+            id: playlist_downloader
+            scroll_list: scroll_list
+            status_container: status_container
+            warning_label: warning_label
+            help_button: help_button
+            orientation: "vertical"
+            size_hint: None, None
+            height:root.height
+            width: root.width *.333
+            padding: 10, 20
+            Label:
+                id: warning_label
+                size_hint: None, None
+                height: root.height * .1
+                width: root.width - 20
+                text_size: root.width - 20, 50
+                markup: True
+            ScrollView:
+                id: scroll_list
+                size_hint:None, None
+                height: root.height * .7
+                width: root.width *.33
+                do_scroll_x: False
+                StatusContainer:
+                    id: status_container
+                    size_hint: None, None
+                    width: root.width
+                    height: root.height
+            FloatLayout:
+                size_hint:None, None
+                height: root.height * .1
+                width: root.width *.33
+                Button:
+                    id: help_button
+                    background_normal: "assets/help.png"
+                    background_down: "assets/help_down.png"
+                    size_hint: None, None
+                    height: 25
+                    width: 25
+                    pos: root.width - 30, 7
+                    on_release: playlist_downloader.open_help()

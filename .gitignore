@@ -1,2 +1,5 @@
 logfile
 audiodump.wav
+*.idea
+*.psd
+temp
