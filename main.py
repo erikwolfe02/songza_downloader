@@ -135,23 +135,29 @@ class StationListingItem(Button):
 class PlaylistSearchPanel(BoxLayout):
     station_info = None
     current_genre_from_list = None
+    _stations = None
+    _is_loading = False
 
     genre_list = ObjectProperty(None)
     station_list = ObjectProperty(None)
     drop_down_button = ObjectProperty(None)
+    playlist_filter_text = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(PlaylistSearchPanel, self).__init__(**kwargs)
         self.register_event_type('on_station_select')
 
     def genre_picked(self, selected_genre):
+        if self._is_loading:
+            self.genre_list.text = self.current_genre_from_list
+            return
         if self.current_genre_from_list == selected_genre:
             return
 
         file_manipulation_thread = threading.Thread(target=self.remove_album_images)
         file_manipulation_thread.start()
-        self.genre = selected_genre
-        chosen_genre = self.genre_list.get_genre(self.genre)
+        self.current_genre_from_list = selected_genre
+        chosen_genre = self.genre_list.get_genre(self.current_genre_from_list)
 
         self.station_list.add_station_selection_listener(self.on_station_select)
 
@@ -160,6 +166,7 @@ class PlaylistSearchPanel(BoxLayout):
             self.add_widget(self._loading_image)
             self.stationLoader = StationLoader(chosen_genre.station_ids, self.add_stations)
             self.stationLoader.start()
+            self._is_loading = True
 
     def add_selection_listener(self, callback):
         self.parent_selection_listener = callback
@@ -171,9 +178,26 @@ class PlaylistSearchPanel(BoxLayout):
         shutil.rmtree("temp")
         os.mkdir("temp")
 
+    def filter_results(self):
+        if self.playlist_filter_text.text is None:
+            self.playlist_filter_text.hint_text = "Filter results"
+        if self.playlist_filter_text.text is not None and self._stations is not None:
+            self._update_list(list(self._filter_dataset(self._stations, self.playlist_filter_text.text)))
+
+    def _filter_dataset(self, list, filter):
+        for station in list:
+            if filter in station.name:
+                yield station
+
     @mainthread
     def add_stations(self, stations):
+        self._stations = stations
         self.remove_widget(self._loading_image)
+        self._update_list(stations)
+        self._is_loading = False
+
+    @mainthread
+    def _update_list(self, stations):
         self.station_list.update_list(stations)
 
 
@@ -275,10 +299,11 @@ class PlaylistDownloader(BoxLayout):
         super(PlaylistDownloader, self).__init__(**kwargs)
 
     def begin_download(self, station, save_dir):
+        self._reset_pane()
         self._song_count_total = str(station.song_count)
         self._downloader = StationDownloader(station.id, self.song_status_listener, save_dir)
         if self._progress_bar is None:
-            self._progress_bar = ProgressBar(max=4, size_hint=(None, None), width=self.width-20)
+            self._progress_bar = ProgressBar(max=4, size_hint=(None, None), width=self.width-20, height=10)
             self._prog_count = Label(size_hint=(None, None), size=(30, 15))
             self._update_song_count_prog(0)
             self.add_widget(self._progress_bar)
@@ -292,13 +317,24 @@ class PlaylistDownloader(BoxLayout):
 
     def stop_download(self):
         self._downloader.stop()
-        self._reset_values()
+        self._reset_progress_values()
 
     def _update_song_count_prog(self, count):
         self._prog_count.text = str(count) + "/" + self._song_count_total
 
+    def _reset_pane(self):
+        if self._song_count_total is not None:
+            self._song_count_total = str("")
+        if self._prog_count is not None:
+            self._prog_count.text = ""
+        if self.warning_label is not None:
+            self.warning_label.text = ""
+        self._current_song_count = 0
+        self._reset_progress_values()
+        self.status_container.remove_children()
+
     @mainthread
-    def _reset_values(self):
+    def _reset_progress_values(self):
         self._progress_bar.value = 0
         self.warning_label.color = (0, 0, 0, 0)
 
@@ -308,6 +344,9 @@ class PlaylistDownloader(BoxLayout):
             self.warning_label.color = (1, 0, 0, 1)
             self.warning_label.text = "Error: Not all songs downloaded.\nTrying a few more times"
             return
+        if (status == SongStates.FINISHED) and not isSuccessful:
+            self._reset_progress_values
+            self.warning_label.text = "Done. Not all songs downloaded"
         if (status == SongStates.PLAYLIST_COMPLETE) and isSuccessful:
             self._progress_bar.value = 0
             self.warning_label.color = (0, 1, 0, 1)
@@ -343,6 +382,9 @@ class PlaylistDownloader(BoxLayout):
 class StatusContainer(BoxLayout):
     def __init__(self, **kwargs):
         super(StatusContainer, self).__init__(**kwargs)
+
+    def remove_children(self):
+        self.clear_widgets(self.children)
 
 
 class StatusEntry(BoxLayout):

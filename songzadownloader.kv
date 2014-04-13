@@ -52,9 +52,6 @@
             '\n\n'
             '**4.** ')
 
-
-
-
 <LoadDialog>:
     BoxLayout:
         size: root.size
@@ -161,11 +158,18 @@
         PlaylistSearchPanel:
             station_list: station_list
             genre_list: genre_list
+            playlist_filter_text: playlist_text_search
             id: playlist_search_panel
             orientation: "vertical"
             size_hint: None, None
             height:root.height
             width: root.width *.333
+            TextInput:
+                id: playlist_text_search
+                size_hint_y: None
+                height: root.height * .05
+                hint_text: "Filter results"
+                on_text: playlist_search_panel.filter_results()
             GenreSpinner:
                 id: genre_list
                 size_hint_y: None
@@ -200,7 +204,28 @@
             height:root.height
             width: root.width *.333
             padding: 10, 20
+            Label:
+                id: warning_label
+                size_hint: None, None
+                height: root.height * .1
+                width: root.width - 20
+                text_size: root.width - 20, 50
+                markup: True
+            ScrollView:
+                id: scroll_list
+                size_hint:None, None
+                height: root.height * .7
+                width: root.width *.33
+                do_scroll_x: False
+                StatusContainer:
+                    id: status_container
+                    size_hint: None, None
+                    width: root.width
+                    height: root.height
             FloatLayout:
+                size_hint:None, None
+                height: root.height * .1
+                width: root.width *.33
                 Button:
                     id: help_button
                     background_normal: "assets/help.png"
@@ -210,20 +235,3 @@
                     width: 25
                     pos: root.width - 30, 7
                     on_release: playlist_downloader.open_help()
-            Label:
-                id: warning_label
-                size_hint: None, None
-                height: 50
-                width: root.width - 20
-                text_size: root.width - 20, 50
-                markup: True
-            ScrollView:
-                id: scroll_list
-                height:root.height * .9
-                width: root.width *.33
-                do_scroll_x: False
-                StatusContainer:
-                    id: status_container
-                    size_hint: None, None
-                    width: root.width
-                    height: root.height

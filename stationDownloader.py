@@ -51,7 +51,8 @@ class StationDownloader(threading.Thread):
         self._ensure_dir_exists(self._album_path_builder(self.album_name))
         self._while_count = 0
         while self._downloaded_count != self._song_count:
-            if self._stop or self._while_count > self._song_count * 2:
+            if self._stop or self._while_count > self._song_count + self._song_count * .5:
+                self._status_callback(the_song, SongStates.FINISHED, False)
                 break
             if self._while_count > self._song_count:
                 self._status_callback(the_song, SongStates.WARNING, False)
